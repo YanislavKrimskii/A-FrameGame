@@ -3,32 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>MindAR + A-Frame — index.html</title>
+
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- MindAR (работающая версия CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-</head>
-    body { margin: 0; font-family: Arial, sans-serif; background: #000; color:#fff; }
-    #ui {
-      position: absolute; left: 10px; top: 10px; z-index: 999;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    button {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
-      color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer;
-    }
-    #hint {
-      position: absolute; left: 50%; transform: translateX(-50%);
-      bottom: 18px; z-index: 999; background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 6px;
-    }
-    #startOverlay {
-      position: absolute; inset: 0; display:flex; align-items:center; justify-content:center;
-      background: rgba(0,0,0,0.5); z-index: 1000;
-    }
-    #startOverlay .card { text-align:center; padding:20px; border-radius:8px; background: rgba(255,255,255,0.03); }
+
+  <style>
+    /* Минимальные встроенные стили (в проекте нет внешних style/app файлов) */
+    body { margin:0; font-family:Inter, Arial, sans-serif; background:#000; color:#fff; }
+    #ui { position: absolute; left:10px; top:10px; z-index:999; display:flex; flex-direction:column; gap:8px; }
+    button { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); color:#fff; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    #hint { position:absolute; left:50%; transform:translateX(-50%); bottom:18px; z-index:999; background:rgba(0,0,0,0.45); padding:8px 12px; border-radius:6px; }
+    #startOverlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:1000; }
+    #startOverlay .card { text-align:center; padding:18px; border-radius:8px; background: rgba(255,255,255,0.03); }
   </style>
 </head>
 <body>
 
-  <!-- UI: кнопки управления -->
+  <!-- UI -->
   <div id="ui">
     <button id="startBtn">Запустить AR (Запрос камеры)</button>
     <button id="btnIncrease">Увеличить</button>
@@ -37,7 +32,6 @@
 
   <div id="hint">Наведите камеру на маркер.</div>
 
-  <!-- Накладка, чтобы пользователь сделал gesture и браузер разрешил звук/камеру -->
   <div id="startOverlay">
     <div class="card">
       <h3>Нажмите «Запустить AR»</h3>
@@ -45,7 +39,7 @@
     </div>
   </div>
 
-  <!-- A-Frame + MindAR scene -->
+  <!-- A-Frame + MindAR -->
   <a-scene
     vr-mode-ui="enabled: false"
     embedded
@@ -54,24 +48,22 @@
     device-orientation-permission-ui="enabled: false"
   >
     <a-assets>
-      <!-- Модель и звук — файлы в корне проекта -->
       <a-asset-item id="gltf1" src="model1.glb"></a-asset-item>
       <audio id="sfx" src="sound.mp3"></audio>
     </a-assets>
 
-    <!-- Свет -->
+    <!-- Освещение -->
     <a-entity light="type: ambient; intensity: 0.6"></a-entity>
-    <a-entity light="type: directional; intensity: 0.8" position="0 1 1"></a-entity>
+    <a-entity light="type: directional; intensity: 0.9" position="0 1 1"></a-entity>
 
-    <!-- Камера для A-Frame (по умолчанию MindAR подставит видео фоновый поток) -->
+    <!-- Камера -->
     <a-entity camera></a-entity>
 
-    <!-- Источник звука (управляемый из JS) -->
+    <!-- Звук (через A-Frame sound component) -->
     <a-entity id="soundEntity" sound="src: #sfx; autoplay: false; volume: 1"></a-entity>
 
-    <!-- Контейнер, привязанный к маркеру (targetIndex: 0) -->
+    <!-- Маркерный контейнер (targetIndex: 0) -->
     <a-entity id="markerRoot" mindar-image-target="targetIndex: 0">
-      <!-- 3D модель: изначально скрыта (scale 0) -->
       <a-entity id="model"
                 gltf-model="#gltf1"
                 class="clickable"
@@ -80,232 +72,204 @@
                 scale="0 0 0"
                 visible="true"
                 >
-        <!-- Анимация появления -- срабатывает по событию 'playAnim' -->
-        <a-animation attribute="scale"
-                     begin="playAnim"
-                     dur="700"
-                     to="0.5 0.5 0.5"
-                     easing="easeOutElastic"></a-animation>
-
-        <!-- Анимация исчезновения -->
-        <a-animation attribute="scale"
-                     begin="hideAnim"
-                     dur="400"
-                     to="0 0 0"></a-animation>
+        <!-- Анимация появления (через атрибут animation) -->
+        <a-entity animation__appear="property: scale; startEvents: playAnim; to: 0.5 0.5 0.5; dur: 700; easing: easeOutElastic"
+                  animation__hide="property: scale; startEvents: hideAnim; to: 0 0 0; dur:400; easing: easeInOutQuad">
+        </a-entity>
       </a-entity>
 
-      <!-- небольшой подсвечивающий плоскость/контур -->
-      <a-ring position="0 0 0" rotation="-90 0 0" radius-inner="0.15" radius-outer="0.18" material="opacity: 0.25"></a-ring>
+      <!-- Контур / кольцо под объектом -->
+      <a-ring position="0 0 0" rotation="-90 0 0" radius-inner="0.15" radius-outer="0.18" material="opacity:0.25"></a-ring>
     </a-entity>
 
-    <!-- Cursor + Raycaster для кликов (работает с мышью и тачем) -->
+    <!-- Cursor (мышь/касание) -->
     <a-entity id="cursor" raycaster="objects:.clickable" cursor="rayOrigin: mouse"></a-entity>
 
   </a-scene>
 
 <script>
-  // Инициализация и логика управления (версия без второй модели)
-  (function () {
-    const startBtn = document.getElementById('startBtn');
-    const startOverlay = document.getElementById('startOverlay');
-    const hint = document.getElementById('hint');
-    const btnInc = document.getElementById('btnIncrease');
-    const btnDec = document.getElementById('btnDecrease');
+(function () {
+  const startBtn = document.getElementById('startBtn');
+  const startOverlay = document.getElementById('startOverlay');
+  const hint = document.getElementById('hint');
+  const btnInc = document.getElementById('btnIncrease');
+  const btnDec = document.getElementById('btnDecrease');
 
-    const scene = document.querySelector('a-scene');
-    const model = document.getElementById('model');
-    const markerRoot = document.getElementById('markerRoot');
-    const soundEntity = document.getElementById('soundEntity');
+  const scene = document.querySelector('a-scene');
+  const model = document.getElementById('model');
+  const markerRoot = document.getElementById('markerRoot');
+  const soundEntity = document.getElementById('soundEntity');
 
-    // Доступ к компоненту mindar-image (A-Frame компонент на <a-scene>)
-    function getMindarComponent() {
-      return scene.components['mindar-image'];
-    }
+  // Проверка доступности MindAR system
+  function isMindarSystemReady() {
+    return !!scene && !!scene.systems && !!scene.systems["mindar-image-system"];
+  }
 
-    // попросим камеру, чтобы браузер выдал prompt
-    async function requestCamera() {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Ваш браузер не поддерживает WebRTC getUserMedia. Попробуйте Chrome/Edge/Firefox.');
-        throw new Error('getUserMedia not supported');
+  // Обработчики обнаружения маркера
+  markerRoot.addEventListener('targetFound', () => {
+    console.log('[MindAR] targetFound');
+    model.emit('playAnim'); // запустить анимацию появления
+    // Проиграть звук через A-Frame sound component (если доступно)
+    try {
+      const s = soundEntity.components && soundEntity.components.sound;
+      if (s) s.playSound();
+      else {
+        const a = document.querySelector('#sfx');
+        if (a) a.play().catch(()=>{/* autoplay blocked */});
       }
-      await navigator.mediaDevices.getUserMedia({ video: true });
-    }
+    } catch (e) { console.warn('sound play error', e); }
+    hint.innerText = 'Маркер найден';
+  });
 
-    // Запустить MindAR
-    async function startMindAR() {
-      try {
-        const mindar = getMindarComponent();
-        if (!mindar) {
-          console.error('MindAR компонент не найден.');
-          return;
-        }
-        await mindar.start();
-        startOverlay.style.display = 'none';
-        hint.innerText = 'Наведи камеру на маркер...';
-      } catch (err) {
-        console.error('Ошибка при старте MindAR:', err);
-        alert('Не удалось запустить AR: ' + err.message);
+  markerRoot.addEventListener('targetLost', () => {
+    console.log('[MindAR] targetLost');
+    model.emit('hideAnim');
+    hint.innerText = 'Наведите камеру на маркер.';
+  });
+
+  // Масштабирование кнопками
+  btnInc.addEventListener('click', () => {
+    const sc = model.getAttribute('scale');
+    const newScale = { x: sc.x * 1.2, y: sc.y * 1.2, z: sc.z * 1.2 };
+    model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
+  });
+
+  btnDec.addEventListener('click', () => {
+    const sc = model.getAttribute('scale');
+    const newScale = { x: sc.x / 1.2, y: sc.y / 1.2, z: sc.z / 1.2 };
+    model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
+  });
+
+  // Drag (перемещение) и Pinch (масштаб) — touch & mouse
+  let dragging = false, lastTouch = null, pinchStartDist = null, startScale = null;
+  function getTouchDist(t0, t1) {
+    const dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+
+  function addPointerHandlers() {
+    const canvas = scene.canvas || document.querySelector('canvas');
+    if (!canvas) { scene.addEventListener('renderstart', addPointerHandlers); return; }
+
+    // touch
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        dragging = true;
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2) {
+        pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
+        const sc = model.getAttribute('scale'); startScale = { x: sc.x, y: sc.y, z: sc.z };
       }
-    }
+    }, { passive: true });
 
-    // Обработчики для событий распознавания маркера
-    markerRoot.addEventListener('targetFound', () => {
-      console.log('targetFound');
-      model.emit('playAnim');
-      try {
-        const s = soundEntity.components.sound;
-        if (s) s.playSound();
-        else {
-          const a = document.querySelector('#sfx');
-          if (a) a.play().catch(()=>{/* autoplay blocked */});
-        }
-      } catch (e) {
-        console.warn('Не удалось проиграть звук:', e);
-      }
-    });
-
-    markerRoot.addEventListener('targetLost', () => {
-      console.log('targetLost');
-      model.emit('hideAnim');
-    });
-
-    // Кнопки управления масштабом
-    btnInc.addEventListener('click', () => {
-      const sc = model.getAttribute('scale');
-      const newScale = { x: sc.x * 1.2, y: sc.y * 1.2, z: sc.z * 1.2 };
-      model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
-    });
-
-    btnDec.addEventListener('click', () => {
-      const sc = model.getAttribute('scale');
-      const newScale = { x: sc.x / 1.2, y: sc.y / 1.2, z: sc.z / 1.2 };
-      model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
-    });
-
-    // Простая реализация drag (одним пальцем) и pinch (для масштабирования)
-    let dragging = false;
-    let lastTouch = null;
-    let pinchStartDist = null;
-    let startScale = null;
-
-    function getTouchDist(t0, t1) {
-      const dx = t0.clientX - t1.clientX;
-      const dy = t0.clientY - t1.clientY;
-      return Math.sqrt(dx*dx + dy*dy);
-    }
-
-    function addPointerHandlers() {
-      const canvas = scene.canvas || document.querySelector('canvas');
-      if (!canvas) {
-        scene.addEventListener('renderstart', () => addPointerHandlers());
-        return;
-      }
-
-      canvas.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) {
-          dragging = true;
-          lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          pinchStartDist = getTouchDist(e.touches[0], e.touches[1]);
-          const sc = model.getAttribute('scale');
-          startScale = { x: sc.x, y: sc.y, z: sc.z };
-        }
-      }, { passive: true });
-
-      canvas.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 1 && dragging && lastTouch) {
-          const dx = e.touches[0].clientX - lastTouch.x;
-          const dy = e.touches[0].clientY - lastTouch.y;
-          const factor = 0.0015;
-          const pos = model.getAttribute('position');
-          model.setAttribute('position', {
-            x: pos.x + dx * factor,
-            y: pos.y - dy * factor * 0.3,
-            z: pos.z + dy * factor * 0.6
-          });
-          lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2 && pinchStartDist && startScale) {
-          const dist = getTouchDist(e.touches[0], e.touches[1]);
-          const ratio = dist / pinchStartDist;
-          const newScale = { x: startScale.x * ratio, y: startScale.y * ratio, z: startScale.z * ratio };
-          model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
-        }
-      }, { passive: true });
-
-      canvas.addEventListener('touchend', (e) => {
-        if (e.touches.length === 0) {
-          dragging = false;
-          lastTouch = null;
-          pinchStartDist = null;
-          startScale = null;
-        }
-      });
-
-      let mouseDown = false;
-      let lastMouse = null;
-      canvas.addEventListener('pointerdown', (e) => {
-        mouseDown = true;
-        lastMouse = { x: e.clientX, y: e.clientY };
-      });
-      canvas.addEventListener('pointermove', (e) => {
-        if (!mouseDown || !lastMouse) return;
-        const dx = e.clientX - lastMouse.x;
-        const dy = e.clientY - lastMouse.y;
+    canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && dragging && lastTouch) {
+        const dx = e.touches[0].clientX - lastTouch.x, dy = e.touches[0].clientY - lastTouch.y;
         const factor = 0.0015;
         const pos = model.getAttribute('position');
-        model.setAttribute('position', {
-          x: pos.x + dx * factor,
-          y: pos.y - dy * factor * 0.3,
-          z: pos.z + dy * factor * 0.6
-        });
-        lastMouse = { x: e.clientX, y: e.clientY };
-      });
-      canvas.addEventListener('pointerup', () => { mouseDown = false; lastMouse = null; });
-      canvas.addEventListener('pointerleave', () => { mouseDown = false; lastMouse = null; });
+        model.setAttribute('position', { x: pos.x + dx*factor, y: pos.y - dy*factor*0.3, z: pos.z + dy*factor*0.6 });
+        lastTouch = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if (e.touches.length === 2 && pinchStartDist && startScale) {
+        const dist = getTouchDist(e.touches[0], e.touches[1]);
+        const ratio = dist / pinchStartDist;
+        const newScale = { x: startScale.x * ratio, y: startScale.y * ratio, z: startScale.z * ratio };
+        model.setAttribute('scale', `${newScale.x} ${newScale.y} ${newScale.z}`);
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchend', (e) => {
+      if (e.touches.length === 0) { dragging=false; lastTouch=null; pinchStartDist=null; startScale=null; }
+    });
+
+    // mouse / pointer
+    let mouseDown = false, lastMouse = null;
+    canvas.addEventListener('pointerdown', (e) => { mouseDown = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!mouseDown || !lastMouse) return;
+      const dx = e.clientX - lastMouse.x, dy = e.clientY - lastMouse.y;
+      const factor = 0.0015;
+      const pos = model.getAttribute('position');
+      model.setAttribute('position', { x: pos.x + dx*factor, y: pos.y - dy*factor*0.3, z: pos.z + dy*factor*0.6 });
+      lastMouse = { x: e.clientX, y: e.clientY };
+    });
+    canvas.addEventListener('pointerup', () => { mouseDown=false; lastMouse=null; });
+    canvas.addEventListener('pointerleave', () => { mouseDown=false; lastMouse=null; });
+  }
+
+  // Нажатие кнопки "Запустить AR" — проверка камеры и запуск системы MindAR
+  startBtn.addEventListener('click', async () => {
+    startBtn.disabled = true;
+    console.log('[Start] user gesture: requesting camera');
+
+    // 1) Запрашиваем доступ к камере (user gesture необходим для разрешения звука/камеры)
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // сразу освобождаем — MindAR сам возьмёт поток при старте
+      stream.getTracks().forEach(t => t.stop());
+      console.log('[Start] camera permission granted');
+    } catch (err) {
+      console.error('[Start] getUserMedia failed', err);
+      alert('Нет доступа к камере: ' + (err.message || err.name));
+      startBtn.disabled = false;
+      return;
     }
 
-    // Инициализация: по нажатию на Start
-    startBtn.addEventListener('click', async () => {
-      startBtn.disabled = true;
+    // 2) Проверяем MindAR system
+    if (!isMindarSystemReady()) {
+      console.error('[Start] mindar-image-system not ready. Проверьте, загружается ли mindar-image-aframe.prod.js (Network).');
+      alert('MindAR не инициализирован. Откройте DevTools → Network и посмотрите загрузку mindar-image-aframe.prod.js.');
+      startBtn.disabled = false;
+      return;
+    }
+
+    const mindarSystem = scene.systems["mindar-image-system"];
+
+    // 3) Запускаем MindAR system
+    try {
+      console.log('[Start] calling mindarSystem.start() ...');
+      await mindarSystem.start(); // <-- корректный вызов для MindAR 1.2.x + A-Frame
+      console.log('[Start] mindarSystem started');
+      startOverlay.style.display = 'none';
+      hint.innerText = 'Наведи камеру на маркер...';
+
+      // разблокируем звук (play после user gesture)
       try {
-        await requestCamera();
-        await startMindAR();
-        addPointerHandlers();
-
-        const a = document.querySelector('#sfx');
-        if (a) {
-          try { await a.load(); } catch(e){}
-        }
-
-      } catch (e) {
-        console.error(e);
-        alert('Ошибка инициализации: ' + (e.message || e));
-      } finally {
-        startBtn.disabled = false;
-      }
-    });
-
-    // Клик по модели — проиграть звук ещё раз
-    model.addEventListener('click', () => {
-      try {
-        const s = soundEntity.components.sound;
+        const s = soundEntity.components && soundEntity.components.sound;
         if (s) s.playSound();
-      } catch(e) { console.warn(e); }
-    });
+      } catch(e){ console.warn('sound play error', e); }
 
-    // Для десктопа: клавиши +/- изменяют масштаб
-    window.addEventListener('keydown', (e) => {
-      if (e.key === '+') btnInc.click();
-      if (e.key === '-') btnDec.click();
-    });
+      // добавим обработчики pointer после того, как canvas готов
+      addPointerHandlers();
 
-  })();
+    } catch (e) {
+      console.error('[Start] mindarSystem.start() error', e);
+      alert('Не удалось запустить AR: ' + (e.message || JSON.stringify(e)));
+      startBtn.disabled = false;
+      return;
+    }
+
+    startBtn.disabled = false;
+  });
+
+  // Клик по модели — проиграть звук снова
+  model.addEventListener('click', () => {
+    try {
+      const s = soundEntity.components && soundEntity.components.sound;
+      if (s) s.playSound();
+    } catch(e){ console.warn(e); }
+  });
+
+  // Горячие клавиши для масштаба (desktop)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === '+') btnInc.click();
+    if (e.key === '-') btnDec.click();
+  });
+
+  // Для удобства: лог состояния mindar system (может показывать undefined до полной загрузки)
+  console.log('MindAR system ready?', !!(scene && scene.systems && scene.systems["mindar-image-system"]));
+
+})();
 </script>
 
 </body>
 </html>
-
-
-
-
-
