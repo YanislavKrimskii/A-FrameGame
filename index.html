@@ -35,11 +35,11 @@
   </div>
 
   <!-- A-Frame + MindAR -->
-  <a-scene 
-  mindar-image="imageTargetSrc: marker.mind; uiLoading: no; uiScanning: no;" 
-  vr-mode-ui="enabled: false" 
-  device-orientation-permission-ui="enabled: false"
-  renderer="colorManagement: true">
+ <a-scene
+  embedded
+  vr-mode-ui="enabled: false"
+  renderer="colorManagement: true"
+  mindar-image="imageTargetSrc: marker.mind; autoStart: false;">
 
     <a-assets>
       <a-asset-item id="gltf1" src="model1.glb"></a-asset-item>
@@ -267,5 +267,6 @@
 
 </body>
 </html>
+
 
 
