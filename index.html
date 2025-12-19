@@ -35,13 +35,12 @@
   </div>
 
   <!-- A-Frame + MindAR -->
-  <a-scene
-    vr-mode-ui="enabled: false"
-    embedded
-    mindar-image="imageTargetSrc: marker.mind; autoStart: false; uiScanning: false;"
-    renderer="colorManagement: true, physicallyCorrectLights: true"
-    device-orientation-permission-ui="enabled: false"
-  >
+  <a-scene 
+  mindar-image="imageTargetSrc: marker.mind; uiLoading: no; uiScanning: no;" 
+  vr-mode-ui="enabled: false" 
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true">
+
     <a-assets>
       <a-asset-item id="gltf1" src="model1.glb"></a-asset-item>
       <audio id="sfx" src="sound.mp3"></audio>
@@ -268,4 +267,5 @@
 
 </body>
 </html>
+
 
